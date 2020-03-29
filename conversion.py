@@ -11,15 +11,13 @@ def to_polygon(geometry, scale, x_min, y_max, label, link):
         polygons.append(list(geometry.exterior.coords))
     else:
         raise ValueError("Geometry is not a polygon or multipolygon")
-    html = f'<g class="thing"> <a href="{link}" style="color:rgba(255,255,255,0.0);">'
+    html = f'''<g class="thing" onmouseover="activate_label('{label}');" onmouseout="deactivate_label();"> <a href="{link}" style="color:rgba(255,255,255,0.0);">'''
     for polygon in polygons:
         html += '<polygon points="'
         for point in polygon:
             html += str(scale * (point[0] - x_min)) + ',' + str(scale * (y_max - point[1])) + ' '
         html += '" style="stroke:black;stroke-width:1"/>'
-    html += f'''</a><g>
-                <text x={200}, y={450} text-anchor="left" dominant-baseline="middle"> {label} </text>
-                </g></g>'''
+    html += "</a></g>"
     return html
 
 def to_html(gdf, label_column, link_column, geometry_column, width):
@@ -33,19 +31,16 @@ def to_html(gdf, label_column, link_column, geometry_column, width):
                 <style>
                   .thing polygon {fill: white;}
                   .thing:hover polygon{fill: orange;}
-                  
-                  .thing g text {fill: rgba(255,255,255,0.0);
-                      font-size:140px;
-                      pointer-events: none;
-                  }
-
-                  .thing:hover g text{ /*the span will display just on :hover state*/
-                        font-size:140px;
-                        fill:rgba(255, 0, 0, 1.0);
-                        text-shadow: #000 0px 0px 10px;
-                        pointer-events: none;
-                  }
-                </style>''' + f'<body> <h1> SELECT A REGION </h1><svg height="{height}" width="{width}">' # style="transform:scaleY(-1);">'
+                </style>'''
+    html += '''<script>
+               function activate_label(label) {
+                   document.getElementById("region_label").innerText = label;
+               }
+               function deactivate_label() {
+                   document.getElementById("region_label").innerText = "Select a Region";
+               }
+               </script>'''
+    html += f'<body> <h1 id="region_label">Select a Region</h1><svg height="{height}" width="{width}">'
     for i, row in gdf.iterrows():
         label = row[label_column]
         link = row[link_column]
