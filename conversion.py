@@ -1,4 +1,5 @@
 import shapely
+import math
 
 def to_polygon(geometry, scale, x_min, y_max, label, link):
     centroid = geometry.centroid.coords[0]
@@ -21,15 +22,13 @@ def to_polygon(geometry, scale, x_min, y_max, label, link):
                 </g></g>'''
     return html
 
-def to_html(gdf, label_column, link_column, geometry_column, pixels):
+def to_html(gdf, label_column, link_column, geometry_column, width):
     min_x = min([row['geometry_simplified'].bounds[0] for i, row in gdf.iterrows()])
     min_y = min([row['geometry_simplified'].bounds[1] for i, row in gdf.iterrows()])
     max_x = max([row['geometry_simplified'].bounds[2] for i, row in gdf.iterrows()])
     max_y = max([row['geometry_simplified'].bounds[3] for i, row in gdf.iterrows()])
-    if (max_y - min_y) > (max_x - min_x):
-        scale = pixels / (max_y - min_y)
-    else:
-        scale = pixels / (max_x - min_x)
+    scale = width / (max_x - min_x)
+    height = math.ceil(scale * (max_y - min_y))
     html = '''<html>
                 <style>
                   .thing polygon {fill: white;}
@@ -46,7 +45,7 @@ def to_html(gdf, label_column, link_column, geometry_column, pixels):
                         text-shadow: #000 0px 0px 10px;
                         pointer-events: none;
                   }
-                </style>''' + f'<body> <h1> SELECT A REGION </h1><svg height="{pixels}" width="{pixels}">' # style="transform:scaleY(-1);">'
+                </style>''' + f'<body> <h1> SELECT A REGION </h1><svg height="{height}" width="{width}">' # style="transform:scaleY(-1);">'
     for i, row in gdf.iterrows():
         label = row[label_column]
         link = row[link_column]
